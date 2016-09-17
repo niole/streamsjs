@@ -15,7 +15,7 @@ function array() {
 
 function internalRange(start, end, step) {
   step = step || 1;
-  var index = start - 1;
+  var index = start - step;
 
   return function(nextIndex) {
     if (!nextIndex) {
@@ -25,7 +25,7 @@ function internalRange(start, end, step) {
         return index;
     }
 
-    return nextIndex;
+    return nextIndex*step;
   };
 }
 
