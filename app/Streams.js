@@ -1,7 +1,8 @@
 /*
  *a library that makes javascript arrays into lazy streams
- *
  */
+
+'use strict';
 
 function array() {
   var a = arguments;
@@ -12,7 +13,7 @@ function array() {
   };
 }
 
-function range(start, end, step) {
+function internalRange(start, end, step) {
   step = step || 1;
   var index = start - 1;
 
@@ -25,7 +26,7 @@ function range(start, end, step) {
 }
 
 function callbackWithRange(rangeStart, rangeEnd, step, cb) {
-  var r = range(rangeStart, rangeEnd, step);
+  var r = internalRange(rangeStart, rangeEnd, step);
   return function() {
     return cb(r());
   };
@@ -33,6 +34,5 @@ function callbackWithRange(rangeStart, rangeEnd, step, cb) {
 
 module.exports = {
   array: array,
-  range: range,
   callbackWithRange: callbackWithRange
 };
