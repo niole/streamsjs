@@ -17,18 +17,22 @@ function internalRange(start, end, step) {
   step = step || 1;
   var index = start - 1;
 
-  return function() {
-    if (index + step < end) {
-      index += step;
+  return function(nextIndex) {
+    if (!nextIndex) {
+        if (index + step < end) {
+          index += step;
+        }
+        return index;
     }
-    return index;
+
+    return nextIndex;
   };
 }
 
 function callbackWithRange(rangeStart, rangeEnd, step, cb) {
   var r = internalRange(rangeStart, rangeEnd, step);
-  return function() {
-    return cb(r());
+  return function(nextIndex) {
+    return cb(r(nextIndex));
   };
 }
 
