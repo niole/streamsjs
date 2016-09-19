@@ -1,5 +1,5 @@
 "use strict";
-
+var getLazyVars = require("./reactiveVarPreProcessor/LazyVarUtil.js");
 var mainTokenizer = require("./reactiveVarPreProcessor/tokenizer.js");
 var constants = require("./reactiveVarPreProcessor/JSConstants.js");
 
@@ -7,38 +7,11 @@ var DELIMETERS = constants.DELIMETERS;
 var DECLARATIONS = constants.DECLARATIONS;
 
 var DELIMETER_TYPE = constants.DELIMETER_TYPE;
-var CHUNK = constants.CHUNK;
-var IS_VAR = constants.IS_VAR;
 var LAZY = constants.LAZY;
+var CHUNK = constants.CHUNK;
 var EQUALS = constants.EQUALS;
-var LAZY_VAR_PATTERN = constants.LAZY_VAR_PATTERN;
 
-function getVariable(substring) {
-  //gets user defined variable name from substring
-  //which passes match with LAZY_VAR_PATTERN
-  return substring.match(IS_VAR)[1];
-}
 
-function getLazyVars(content, lazyVars) {
-  var nextLazy = content.indexOf(LAZY);
-
-  if (nextLazy > -1) {
-    var nextEquals = content.indexOf(EQUALS, nextLazy);
-
-    if (nextEquals > -1) {
-        var possibleLazyVar = content.slice(nextLazy, nextEquals+1);
-        var isLazyVar = LAZY_VAR_PATTERN.test(possibleLazyVar);
-
-        if (isLazyVar) {
-          var userDefinedVar = getVariable(possibleLazyVar);
-          lazyVars[userDefinedVar] = true;
-        }
-    }
-    return getLazyVars(content.slice(nextEquals+1), lazyVars);
-  }
-
-  return lazyVars;
-}
 
 function isLazyDeclaration(tokens, currIndex) {
   //do not add parens to lazyVar preceeded by (right to left) 1 or more spaces, a var, 1 or more spaces,
