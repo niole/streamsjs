@@ -1,109 +1,17 @@
 "use strict";
 
-var LAZY = "/*lazy*/";
-var SEMI_COLON = ";";
-var COMMA = ",";
-var SPACE = " ";
-var LEFT_PAREN = "(";
-var RIGHT_PAREN = ")";
-var LEFT_BRACKET = "{";
-var RIGHT_BRACKET = "}";
-var DOT = ".";
+var mainTokenizer = require("./reactiveVarPreProcessor/tokenizer.js");
+var constants = require("./reactiveVarPreProcessor/JSConstants.js");
 
-var EQUALS = "=";
-var LT = "<";
-var GT = ">";
-var UNARY = "!";
-var PLUS = "+";
-var MINUS = "-";
+var DELIMETERS = constants.DELIMETERS;
+var DECLARATIONS = constants.DECLARATIONS;
 
-var FOR = "for";
-var IN = "in";
-var FUNC_DEC = "function";
-var VAR_DEC = "var";
-var LET = "let";
-var CONST = "const";
-var NEW = "new";
-var SWITCH = "switch";
-var CASE = "case";
-var IF = "if";
-var ELSE = "else";
-var CONTINUE = "continue";
-var WHILE = "while";
-var RETURN = "return";
-var TRY = "try";
-var CATCH = "catch";
-var DEFAULT = "default";
-var THROW = "throw";
-var BREAK = "break";
-var DEBUGGER = "debugger";
-var LABEL = "label";
-var IMPORT = "import";
-var REQUIRE = "require";
-
-var CHUNK = "chunk";
-
-var DELIMETERS = {
-  [EQUALS]: EQUALS,
-  [LT]: LT,
-  [GT]: GT,
-  [UNARY]: UNARY,
-  [PLUS]: PLUS,
-  [MINUS]: MINUS,
-  [LEFT_BRACKET]: LEFT_BRACKET,
-  [RIGHT_BRACKET]: RIGHT_BRACKET,
-  [RIGHT_PAREN]: RIGHT_PAREN,
-  [LEFT_PAREN]: LEFT_PAREN,
-  [SPACE]: SPACE,
-  [COMMA]: COMMA,
-  [SEMI_COLON]: SEMI_COLON,
-};
-
-var BOOLEAN_OPS = {
-  [EQUALS]: EQUALS,
-  [LT]: LT,
-  [GT]: GT,
-  [UNARY]: UNARY,
-};
-
-var INFIX_OPS = {
-  [EQUALS]: EQUALS,
-  [PLUS]: PLUS,
-  [MINUS]: MINUS,
-};
-
-var DECLARATIONS = {
-  [LET]: LET,
-  [CONST]: CONST,
-  [FUNC_DEC]: FUNC_DEC,
-  [VAR_DEC]: VAR_DEC,
-  [NEW]: NEW,
-};
-
-var STATEMENTS = {
-  [LABEL]: LABEL,
-  [IMPORT]: IMPORT,
-  [REQUIRE]: REQUIRE,
-  [DEBUGGER]: DEBUGGER,
-  [BREAK]: BREAK,
-  [THROW]: THROW,
-  [DEFAULT]: DEFAULT,
-  [TRY]: TRY,
-  [CATCH]: CATCH,
-  [CONTINUE]: CONTINUE,
-  [RETURN]: RETURN,
-  [WHILE]: WHILE,
-  [FOR]: FOR,
-  [IN]: IN,
-  [SWITCH]: SWITCH,
-  [CASE]: CASE,
-  [IF]: IF,
-  [ELSE]: ELSE,
-};
-
-var DELIMETER_TYPE = "delimeter";
-var LAZY_VAR_PATTERN = /\/\*lazy\*\/\s*var\s*[^\s]+\s*=$/;
-var IS_VAR = /([^\s]+)\s*=/;
+var DELIMETER_TYPE = constants.DELIMETER_TYPE;
+var CHUNK = constants.CHUNK;
+var IS_VAR = constants.IS_VAR;
+var LAZY = constants.LAZY;
+var EQUALS = constants.EQUALS;
+var LAZY_VAR_PATTERN = constants.LAZY_VAR_PATTERN;
 
 function getVariable(substring) {
   //gets user defined variable name from substring
@@ -123,7 +31,6 @@ function getLazyVars(content, lazyVars) {
 
         if (isLazyVar) {
           var userDefinedVar = getVariable(possibleLazyVar);
-          //lazyVars.push(userDefinedVar);
           lazyVars[userDefinedVar] = true;
         }
     }
@@ -137,7 +44,7 @@ function isLazyDeclaration(tokens, currIndex) {
   //do not add parens to lazyVar preceeded by (right to left) 1 or more spaces, a var, 1 or more spaces,
   //the variable name, 1 or more spaces, a lazy
   var nextIndex = multipleLookBack(tokens, currIndex, function(token) {
-    return token.content === SPACE;
+    return token.content === DELIMETERS.SPACE;
   });
 
   if (nextIndex === currIndex) {
@@ -146,12 +53,12 @@ function isLazyDeclaration(tokens, currIndex) {
   }
 
   var lastIndexVar = singleLookBack(tokens, nextIndex, function(token) {
-    return [VAR_DEC, CONST, LET].indexOf(token.content) > -1;
+    return [DECLARATIONS.VAR_DEC, DECLARATIONS.CONST, DECLARATIONS.LET].indexOf(token.content) > -1;
   });
 
   if (lastIndexVar > 0 && lastIndexVar !== nextIndex) {
     var lastIndexSpaces = multipleLookBack(tokens, lastIndexVar, function(token) {
-      return token.content === SPACE;
+      return token.content === DELIMETERS.SPACE;
     });
 
     if (lastIndexSpaces === lastIndexVar) {
@@ -213,7 +120,7 @@ function replaceVars(tokens, lazyVars, currIndex, check) {
       }
     }
 
-    if (tokens[currIndex].content === LEFT_BRACKET) {
+    if (tokens[currIndex].content === DELIMETERS.LEFT_BRACKET) {
       var lastFunctionIndex = lookBackIsFunctionBlock(tokens, currIndex);
 
       if (lastFunctionIndex > -1) {
@@ -223,7 +130,7 @@ function replaceVars(tokens, lazyVars, currIndex, check) {
         //captured via closure? Those should also be reactive
 
         return tokens[currIndex].content + replaceVars(tokens, lazyVars, currIndex+1, function(token) {
-          return token.content === RIGHT_BRACKET;
+          return token.content === DELIMETERS.RIGHT_BRACKET;
         });
       }
     }
@@ -262,13 +169,13 @@ function lookBackIsFunctionBlock(tokens, currIndex) {
   if (currIndex > 0) {
     //0 or more spaces
     var lastSpaceIndex = multipleLookBack(tokens, currIndex, function(token) {
-     return token.content === SPACE;
+     return token.content === DELIMETERS.SPACE;
     });
 
     if (lastSpaceIndex > 0) {
       //1 right paren
       var lastRighParenIndex = singleLookBack(tokens, lastSpaceIndex, function(token) {
-       return token.content === RIGHT_PAREN;
+       return token.content === DELIMETERS.RIGHT_PAREN;
       });
 
      if (lastRighParenIndex > 0 && lastRighParenIndex !== lastSpaceIndex) {
@@ -276,18 +183,18 @@ function lookBackIsFunctionBlock(tokens, currIndex) {
 
        if (lastParamIndex > 0) {
          var lastLeftParenIndex = singleLookBack(tokens, lastParamIndex, function(token) {
-           return token.content === LEFT_PAREN;
+           return token.content === DELIMETERS.LEFT_PAREN;
          });
 
          if (lastLeftParenIndex > 0 && lastLeftParenIndex !== lastRighParenIndex) {
            //check for 0 or 1 chunk, then function declaration check
            var lastChunkIndex = singleLookBack(tokens, lastLeftParenIndex, function(token) {
-               return token.type === CHUNK && token.content !== FUNC_DEC;
+               return token.type === CHUNK && token.content !== DECLARATIONS.FUNC_DEC;
            });
 
            if (lastChunkIndex > 0) {
              var lastFunctionIndex = singleLookBack(tokens, lastChunkIndex, function(token) {
-               return token.content === FUNC_DEC;
+               return token.content === DECLARATIONS.FUNC_DEC;
              });
 
              if (lastFunctionIndex > 0 && lastFunctionIndex !== lastChunkIndex) {
@@ -315,7 +222,7 @@ function lookBackAreParams(tokens, currIndex) {
   //repeat
 
   var lastSpaceIndex = multipleLookBack(tokens, currIndex, function(token) {
-    return token.content === SPACE
+    return token.content === DELIMETERS.SPACE
    });
 
    var lastChunkIndex = singleLookBack(tokens, lastSpaceIndex, function(token) {
@@ -324,7 +231,7 @@ function lookBackAreParams(tokens, currIndex) {
 
 
   var lastSpaceIndex_2 = multipleLookBack(tokens, lastChunkIndex, function(token) {
-    return token.content === SPACE
+    return token.content === DELIMETERS.SPACE
    });
 
   if (lastChunkIndex === lastSpaceIndex) {
@@ -334,7 +241,7 @@ function lookBackAreParams(tokens, currIndex) {
   }
 
   var lastCommaIndex = singleLookBack(tokens, lastSpaceIndex_2, function(token) {
-    return token.content === COMMA;
+    return token.content === DELIMETERS.COMMA;
   });
 
   if (lastCommaIndex !== lastSpaceIndex_2) {
@@ -355,50 +262,13 @@ function lookBackIsChunk(tokens, currIndex, check) {
   return currIndex;
 }
 
-
-function mainTokenizer(content, currIndex) {
-  var isDelimeter = DELIMETERS[content[currIndex]];
-  if (isDelimeter) {
-     return [{
-       type: DELIMETER_TYPE,
-       content: isDelimeter
-     }].concat(mainTokenizer(content, currIndex+1));
-  }
-
-  //keep going until you see another delimeter and keep what you saw in the interim
-  //we only care about variables
-  var nextTokenAndState = keepUntilNextDelimeter(content, currIndex, "");
-  var endIndex = nextTokenAndState.endIndex;
-  var prevToken = nextTokenAndState.token;
-
-  if (endIndex + 1 === content.length) {
-      return [prevToken];
-  }
-
-  return [prevToken].concat(mainTokenizer(content, endIndex+1));
-}
-
-function keepUntilNextDelimeter(content, currIndex, acc) {
-  var isDelimeter = DELIMETERS[content[currIndex]];
-
-  if (isDelimeter || currIndex === content.length) {
-      return {
-        token: {
-          type: CHUNK,
-          content: acc
-        },
-        endIndex: currIndex-1
-      };
-  }
-
-  return keepUntilNextDelimeter(content, currIndex+1, acc+content[currIndex]);
-}
-
 function lazy(content) {
   content = "/*lazy*/ var x = 9; function add(x, y) {return x+y;}";
   var lazyVars = getLazyVars(content, {});
   var tokens = mainTokenizer(content, 0);
   var newVars = replaceVars(tokens, lazyVars, 0);
+  console.log('content', content);
+  console.log('newVars', newVars);
 }
 
 lazy();
