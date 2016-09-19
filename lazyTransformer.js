@@ -1,5 +1,5 @@
 "use strict";
-var lazy = require("./lazyTransformerGuts.js");
+var lazy = require("./preprocessor/lazyTransformerPreProcessor.js");
 
 module.exports = function(content) {
   lazy();
