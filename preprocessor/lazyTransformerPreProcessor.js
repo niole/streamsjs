@@ -34,12 +34,9 @@ function isLazyDeclaration(tokens, currIndex) {
       return token.content === DELIMETERS.SPACE;
     });
 
-    if (lastIndexSpaces === lastIndexVar) {
-      //no spaces
-      return false;
+    if (lastIndexSpaces > 0 && lastIndexSpaces !== lastIndexVar) {
+      return tokens[lastIndexSpaces-1].content === LAZY;
     }
-
-    return tokens[lastIndexSpaces].content === LAZY;
   }
 
   return false;
@@ -89,13 +86,11 @@ function replaceVars(tokens, lazyVars, currIndex, check) {
       var isRightBracket = check(tokens[currIndex]);
       if (!isRightBracket) {
         //keep going till reach right bracketc
-        return tokens.content + replaceVars(tokens, lazyVars, currIndex+1, check);
+        return tokens[currIndex].content + replaceVars(tokens, lazyVars, currIndex+1, check);
       }
     }
-
     if (tokens[currIndex].content === DELIMETERS.LEFT_BRACKET) {
       var lastFunctionIndex = lookBackIsFunctionBlock(tokens, currIndex);
-
       if (lastFunctionIndex > -1) {
         //yes, we're entering a function block
         //ignore everything
@@ -107,8 +102,6 @@ function replaceVars(tokens, lazyVars, currIndex, check) {
         });
       }
     }
-
-
 
     var nextVar = replaceLazyVars(tokens, currIndex, lazyVars);
     return nextVar + replaceVars(tokens, lazyVars, currIndex+1);
@@ -151,31 +144,44 @@ function lookBackIsFunctionBlock(tokens, currIndex) {
        return token.content === DELIMETERS.RIGHT_PAREN;
       });
 
-     if (lastRighParenIndex > 0 && lastRighParenIndex !== lastSpaceIndex) {
-       var lastParamIndex = lookBackAreParams(tokens, lastRighParenIndex);
+      if (lastRighParenIndex > 0 && lastRighParenIndex !== lastSpaceIndex) {
+        var lastParamIndex = lookBackAreParams(tokens, lastRighParenIndex);
 
-       if (lastParamIndex > 0) {
-         var lastLeftParenIndex = singleLookBack(tokens, lastParamIndex, function(token) {
+
+        if (lastParamIndex > 0) {
+          var lastLeftParenIndex = singleLookBack(tokens, lastParamIndex, function(token) {
            return token.content === DELIMETERS.LEFT_PAREN;
-         });
+          });
 
-         if (lastLeftParenIndex > 0 && lastLeftParenIndex !== lastRighParenIndex) {
-           //check for 0 or 1 chunk, then function declaration check
-           var lastChunkIndex = singleLookBack(tokens, lastLeftParenIndex, function(token) {
+
+          if (lastLeftParenIndex > 0 && lastLeftParenIndex !== lastRighParenIndex) {
+            //check for 0 or 1 chunk, then spaces, then function declaration check
+            var optionalSpaceIndex = multipleLookBack(tokens, lastLeftParenIndex, function(token) {
+               return token.content === DELIMETERS.SPACE;
+            });
+
+            var lastChunkIndex = singleLookBack(tokens, optionalSpaceIndex, function(token) {
                return token.type === CHUNK && token.content !== DECLARATIONS.FUNC_DEC;
-           });
+            });
 
-           if (lastChunkIndex > 0) {
-             var lastFunctionIndex = singleLookBack(tokens, lastChunkIndex, function(token) {
-               return token.content === DECLARATIONS.FUNC_DEC;
-             });
+            if (lastChunkIndex > 0) {
 
-             if (lastFunctionIndex > 0 && lastFunctionIndex !== lastChunkIndex) {
-               return lastFunctionIndex;
-             }
-           }
-         }
-       }
+              var oneOrMoreSpaceIndex = multipleLookBack(tokens, lastChunkIndex, function(token) {
+               return token.content === DELIMETERS.SPACE;
+              });
+
+              if (oneOrMoreSpaceIndex > 0) {
+                var lastFunctionIndex = singleLookBack(tokens, oneOrMoreSpaceIndex, function(token) {
+                 return token.content === DECLARATIONS.FUNC_DEC;
+                });
+
+                if (lastFunctionIndex !== lastChunkIndex) {
+                 return lastFunctionIndex;
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -202,12 +208,11 @@ function lookBackAreParams(tokens, currIndex) {
      return token.type === CHUNK;
    });
 
-
   var lastSpaceIndex_2 = multipleLookBack(tokens, lastChunkIndex, function(token) {
     return token.content === DELIMETERS.SPACE
    });
 
-  if (lastChunkIndex === lastSpaceIndex) {
+  if (lastSpaceIndex_2 === lastSpaceIndex) {
     //no chunks and checked for spaces and return
     //index after extra spaces
     return lastSpaceIndex_2;
@@ -223,7 +228,7 @@ function lookBackAreParams(tokens, currIndex) {
     return lookBackAreParams(tokens, lastCommaIndex);
   }
 
-  return -1;
+  return lastCommaIndex;
 }
 
 
