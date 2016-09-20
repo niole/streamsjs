@@ -1,6 +1,7 @@
 "use strict";
 var constants = require("./constants.js");
 
+var LAZY = constants.LAZY;
 var BLOCK = constants.BLOCK;
 var PARENS = constants.PARENS;
 var LAZY_VAR_PATTERN = constants.LAZY_VAR_PATTERN;
