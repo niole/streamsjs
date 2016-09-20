@@ -12,7 +12,6 @@ var CHUNK = constants.CHUNK;
 var EQUALS = constants.EQUALS;
 
 
-
 function isLazyDeclaration(tokens, currIndex) {
   //do not add parens to lazyVar preceeded by (right to left) 1 or more spaces, a var, 1 or more spaces,
   //the variable name, 1 or more spaces, a lazy
@@ -90,6 +89,9 @@ function replaceVars(tokens, lazyVars, currIndex, check) {
       }
     }
     if (tokens[currIndex].content === DELIMETERS.LEFT_BRACKET) {
+      //TODO: reactive vars in function block should be updated UNLESS they're defined
+      //in the arguments at function definition
+      //reactive vars in function call should be updated
       var lastFunctionIndex = lookBackIsFunctionBlock(tokens, currIndex);
       if (lastFunctionIndex > -1) {
         //yes, we're entering a function block
@@ -132,6 +134,7 @@ function singleLookBack(tokens, currIndex, check) {
  */
 
 function lookBackIsFunctionBlock(tokens, currIndex) {
+  //returns array of reactive variables
   if (currIndex > 0) {
     //0 or more spaces
     var lastSpaceIndex = multipleLookBack(tokens, currIndex, function(token) {
