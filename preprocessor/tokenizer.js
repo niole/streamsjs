@@ -28,6 +28,7 @@ var DECLARATION_TYPE = constants.DECLARATION_TYPE;
 var VARIABLE_TYPE = constants.VARIABLE_TYPE;
 var STATEMENT_TYPE = constants.STATEMENT_TYPE;
 var SHORT_HAND_TYPE = constants.SHORT_HAND_TYPE;
+var EXPRESSIONS = constants.EXPRESSIONS;
 
 function mainTokenizer(content, currIndex, mainAcc) {
   var chr = content[currIndex];
@@ -132,7 +133,10 @@ function mainTokenizer(content, currIndex, mainAcc) {
     mainAcc.push(nextToken)
     return mainTokenizer(content, nextIndex+1, mainAcc);
   }
-  return mainAcc;
+
+  return function(index) {
+    return mainAcc[index];
+  }
 }
 
 function lookAhead(content, currIndex, acc, test) {

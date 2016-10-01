@@ -5,7 +5,7 @@ var constants = require("./constants.js");
 
 var DELIMETERS = constants.DELIMETERS;
 var DECLARATIONS = constants.DECLARATIONS;
-
+var VARIABLE_TYPE = constants.VARIABLE_TYPE;
 var DELIMETER_TYPE = constants.DELIMETER_TYPE;
 var LAZY = constants.LAZY;
 var CHUNK = constants.CHUNK;

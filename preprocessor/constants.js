@@ -110,6 +110,13 @@ var INFIX_OPS = {
   [DIV]: DIV,
   [PLUS]: PLUS,
   [MINUS]: MINUS,
+  PLUS_EQUALS: PLUS_EQUALS,
+  MINUS_EQUALS: MINUS_EQUALS,
+  MOD: MOD,
+  MULT: MULT,
+  DIV: DIV,
+  PLUS: PLUS,
+  MINUS: MINUS,
 };
 
 var ASSIGNMENTS = {
@@ -153,6 +160,11 @@ var STATEMENTS = {
 var BLOCK = "block";
 var PARENS = "parens";
 
+var LEFT_STAR_COMMENT = "/*";
+var RIGHT_STAR_COMMENT = "*/";
+var COMMENT = "//";
+
+var LAZY_TYPE = "lazy";
 var ASSIGMENT_TYPE = "assignment";
 var BOOLEAN_OP_TYPE = "boolean operator";
 var INFIX_OP_TYPE = "infix operator";
@@ -164,7 +176,25 @@ var STATEMENT_TYPE = "statement";
 var LAZY_VAR_PATTERN = /\/\*lazy\*\/\s*var\s*[^\s]+\s*=$/;
 var IS_VAR = /([^\s]+)\s*=/;
 
+var EXPRESSIONS = {
+  FUNC_DEC: FUNC_DEC,
+  FUNCTION_EXEC: "executing function",
+  INFIX: "infix expression",
+  VARIABLE: "variable expression",
+};
+
+var COMMENTS = {
+  [LEFT_STAR_COMMENT]: LEFT_STAR_COMMENT,
+  [RIGHT_STAR_COMMENT]: RIGHT_STAR_COMMENT,
+  [COMMENT]: COMMENT,
+  LEFT_STAR_COMMENT: LEFT_STAR_COMMENT,
+  RIGHT_STAR_COMMENT: RIGHT_STAR_COMMENT,
+  COMMENT: COMMENT,
+};
+
 module.exports = {
+  EXPRESSIONS: EXPRESSIONS,
+  COMMENTS: COMMENTS,
   LITERALS: LITERALS,
   SHORT_HAND_TYPE: SHORT_HAND_TYPE,
   STATEMENT_TYPE: STATEMENT_TYPE,
@@ -199,4 +229,5 @@ module.exports = {
   BOOLEAN_OPS: BOOLEAN_OPS,
   ASSIGNMENTS: ASSIGNMENTS,
   INFIX_OPS: INFIX_OPS,
+  LAZY_TYPE: LAZY_TYPE,
 };
